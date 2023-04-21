@@ -2,12 +2,18 @@
 #include <DHT.h>
 #include <ezButton.h>
 
-#define LOOP_STATE_STOPPED 0
-#define LOOP_STATE_STARTED 1
-#define DHTPIN 8
-#define motorPin 3
+#define blueLED 13
+#define greenLED 12
+#define redLED 11
+#define yellowLED 10
 #define waterPin 9
+#define DHTPIN 8
+#define motorPin 7
+#define buttonPin 6
 #define waterSignal A5
+
+#define OFF 0
+#define ON 1
 #define DHTTYPE DHT11
 
 float h;
@@ -15,10 +21,10 @@ float t;
 float f;
 
 int waterLevel = 0;
-int loopState = LOOP_STATE_STOPPED;
+int loopState = OFF;
 
 DHT dht = DHT(DHTPIN, DHTTYPE);
-ezButton button(6);
+ezButton button(buttonPin);
 
 void setup() {
   Serial.begin(9600);
@@ -28,6 +34,13 @@ void setup() {
   
   pinMode(waterPin, OUTPUT);
   pinMode(motorPin, OUTPUT);
+  pinMode(blueLED, OUTPUT);
+  pinMode(greenLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+  pinMode(yellowLED, OUTPUT);
+  pinMode(buttonPin, OUTPUT);
+  
+  digitalWrite(waterPin, LOW);
   
 }
 
@@ -35,14 +48,17 @@ void loop() {
   button.loop();
 
   if (button.isPressed()) {
-    if (loopState == LOOP_STATE_STOPPED)
-      loopState = LOOP_STATE_STARTED;
+    if (loopState == OFF)
+      loopState = ON;
     else
-      loopState = LOOP_STATE_STOPPED;
+      loopState = OFF;
   }
 
-  if (loopState == LOOP_STATE_STARTED) {
+  if (loopState == ON) {
     temperatureHumidity();
+  }
+  if (loopState == OFF) {
+    turnOff();
   }
 }
 
@@ -54,7 +70,7 @@ void waterSensor() {
   digitalWrite(waterPin, HIGH);
   delay(10);
   
-  waterLevel = analogRead(SIGNAL_PIN);
+  waterLevel = analogRead(waterSignal);
   digitalWrite(waterPin, LOW);
 
   Serial.print("Sensor value: ");
@@ -84,4 +100,16 @@ void temperatureHumidity() {
   Serial.print(f);
   Serial.print(" \xC2\xB0");
   Serial.print("F ");
+}
+
+void turnOff() {
+  digitalWrite(blueLED, LOW);
+  digitalWrite(greenLED, LOW);
+  digitalWrite(redLED, LOW);
+  digitalWrite(yellowLED, LOW);
+  digitalWrite(waterPin, LOW);
+  digitalWrite(DHTPIN, LOW);
+  digitalWrite(motorPin, LOW);
+  digitalWrite(buttonPin, LOW);
+  analogWrite(waterSignal, LOW);
 }
