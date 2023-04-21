@@ -4,9 +4,9 @@
 
 #define LOOP_STATE_STOPPED 0
 #define LOOP_STATE_STARTED 1
-#define DHTPIN 2
+#define DHTPIN 8
 #define motorPin 3
-#define waterPin 7
+#define waterPin 9
 #define waterSignal A5
 #define DHTTYPE DHT11
 
