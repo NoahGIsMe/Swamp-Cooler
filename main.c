@@ -1,6 +1,7 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <ezButton.h>
+#include <LiquidCrystal.h>
 
 #define blueLED 13
 #define greenLED 12
@@ -16,6 +17,8 @@
 #define ON 1
 #define DHTTYPE DHT11
 
+const int rs = 5, en = 4, d4 = 3, d5 = 2, d6 = 1, d7 = 0;
+
 float h;
 float t;
 float f;
@@ -23,13 +26,15 @@ float f;
 int waterLevel = 0;
 int loopState = OFF;
 
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 DHT dht = DHT(DHTPIN, DHTTYPE);
 ezButton button(buttonPin);
 
 void setup() {
   Serial.begin(9600);
   button.setDebounceTime(50);
-
+  
+  lcd.begin(16, 2);
   dht.begin();
   
   pinMode(waterPin, OUTPUT);
