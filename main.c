@@ -1,7 +1,6 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <ezButton.h>
-#include <LiquidCrystal.h>
 
 #define blueLED 13
 #define greenLED 12
@@ -12,12 +11,9 @@
 #define motorPin 7
 #define buttonPin 6
 #define waterSignal A5
-
 #define OFF 0
 #define ON 1
 #define DHTTYPE DHT11
-
-const int rs = 5, en = 4, d4 = 3, d5 = 2, d6 = 1, d7 = 0;
 
 float h;
 float t;
@@ -26,15 +22,13 @@ float f;
 int waterLevel = 0;
 int loopState = OFF;
 
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 DHT dht = DHT(DHTPIN, DHTTYPE);
 ezButton button(buttonPin);
 
 void setup() {
   Serial.begin(9600);
   button.setDebounceTime(50);
-  
-  lcd.begin(16, 2);
+
   dht.begin();
   
   pinMode(waterPin, OUTPUT);
@@ -46,7 +40,6 @@ void setup() {
   pinMode(buttonPin, OUTPUT);
   
   digitalWrite(waterPin, LOW);
-  
 }
 
 void loop() {
@@ -61,14 +54,32 @@ void loop() {
 
   if (loopState == ON) {
     temperatureHumidity();
+    waterSensor();
+    digitalWrite(greenLED, HIGH);
+
+    if (waterLevel < 100) {
+      digitalWrite(redLED, HIGH);
+      digitalWrite(yellowLED, LOW);
+      digitalWrite(blueLED, LOW);
+      digitalWrite(motorPin, LOW);
+    }
+    else if (h > 70 || f < 75) {
+      digitalWrite(yellowLED, HIGH);
+      digitalWrite(redLED, LOW);
+      digitalWrite(blueLED, LOW);
+      digitalWrite(motorPin, LOW);
+    }
+    else {
+      digitalWrite(motorPin, HIGH);
+      digitalWrite(blueLED, HIGH);
+      digitalWrite(yellowLED, LOW);
+      digitalWrite(redLED, LOW);    
+      }
   }
-  if (loopState == OFF) {
+
+  else if (loopState == OFF) {
     turnOff();
   }
-}
-
-void motorControl() {
-  digitalWrite(motorPin, HIGH);
 }
 
 void waterSensor() {
@@ -87,10 +98,9 @@ void temperatureHumidity() {
   delay(2000);
   
   h = dht.readHumidity();
-  t = dht.readTemperature();
   f = dht.readTemperature(true);
   
-  if (isnan(h) || isnan(t) || isnan(f)) {
+  if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
     return;
   }
@@ -99,9 +109,7 @@ void temperatureHumidity() {
   Serial.print(h);
   Serial.print(" % ");
   Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.print(" \xC2\xB0");
-  Serial.print("C | ");
+
   Serial.print(f);
   Serial.print(" \xC2\xB0");
   Serial.print("F ");
