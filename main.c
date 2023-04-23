@@ -9,14 +9,13 @@
 #define waterPin 9
 #define DHTPIN 8
 #define motorPin 7
-#define buttonPin 6
+#define buttonPin 4
 #define waterSignal A5
 #define OFF 0
 #define ON 1
 #define DHTTYPE DHT11
 
 float h;
-float t;
 float f;
 
 int waterLevel = 0;
@@ -37,48 +36,47 @@ void setup() {
   pinMode(greenLED, OUTPUT);
   pinMode(redLED, OUTPUT);
   pinMode(yellowLED, OUTPUT);
-  pinMode(buttonPin, OUTPUT);
+  pinMode(buttonPin, INPUT);
   
   digitalWrite(waterPin, LOW);
 }
 
 void loop() {
   button.loop();
-
+  
   if (button.isPressed()) {
-    if (loopState == OFF)
-      loopState = ON;
-    else
-      loopState = OFF;
+    loopState =! loopState;
   }
 
-  if (loopState == ON) {
-    temperatureHumidity();
-    waterSensor();
-    digitalWrite(greenLED, HIGH);
+  switch (loopState) {
+    case ON:
+      temperatureHumidity();
+      waterSensor();
+      digitalWrite(greenLED, HIGH);
 
-    if (waterLevel < 100) {
-      digitalWrite(redLED, HIGH);
-      digitalWrite(yellowLED, LOW);
-      digitalWrite(blueLED, LOW);
-      digitalWrite(motorPin, LOW);
-    }
-    else if (h > 70 || f < 75) {
-      digitalWrite(yellowLED, HIGH);
-      digitalWrite(redLED, LOW);
-      digitalWrite(blueLED, LOW);
-      digitalWrite(motorPin, LOW);
-    }
-    else {
-      digitalWrite(motorPin, HIGH);
-      digitalWrite(blueLED, HIGH);
-      digitalWrite(yellowLED, LOW);
-      digitalWrite(redLED, LOW);    
+      if (waterLevel < 100) {
+        digitalWrite(redLED, HIGH);
+        digitalWrite(blueLED, LOW);
+        digitalWrite(motorPin, LOW);
       }
-  }
 
-  else if (loopState == OFF) {
-    turnOff();
+      if (h > 70 || f < 75) {
+        digitalWrite(yellowLED, HIGH);
+        digitalWrite(blueLED, LOW);
+        digitalWrite(motorPin, LOW);
+      }
+
+      if (waterLevel > 100 && h < 70 && f > 75) {
+        digitalWrite(motorPin, HIGH);
+        digitalWrite(blueLED, HIGH);
+        digitalWrite(yellowLED, LOW);
+        digitalWrite(redLED, LOW);    
+      }
+    break;
+
+    case OFF:
+      turnOff();
+    break;
   }
 }
 
@@ -100,7 +98,7 @@ void temperatureHumidity() {
   h = dht.readHumidity();
   f = dht.readTemperature(true);
   
-  if (isnan(h) || isnan(t)) {
+  if (isnan(h) || isnan(f)) {
     Serial.println("Failed to read from DHT sensor!");
     return;
   }
