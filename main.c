@@ -1,6 +1,7 @@
 #include <Adafruit_Sensor.h> //Water level sensor library
 #include <DHT.h> //Temperature and humidity sensor library
 #include <ezButton.h> //Button library
+#include <LiquidCrystal.h> //LCD library
 
 //Pinout definitions to make the program easier to read
 #define blueLED 13
@@ -28,7 +29,8 @@ ezButton button(buttonPin); //Button initialization
 void setup() {
   Serial.begin(9600);
   button.setDebounceTime(50);
-
+  
+  lcd.begin(16,2); //16x2 LCD screen size
   dht.begin();
   
   pinMode(waterPin, OUTPUT);
@@ -46,7 +48,7 @@ void loop() {
   button.loop(); //Button library initialization
   
   if (button.isPressed()) {
-    loopState =! loopState; //If the button is pressed, the state of void loop() is updated
+    loopState =! loopState; //If the button is pressed, the state of void loop() is updated using SWITCH-CASE
   }
 
   switch (loopState) {
@@ -54,6 +56,8 @@ void loop() {
       temperatureHumidity();
       waterSensor();
       digitalWrite(greenLED, HIGH);
+      
+      LCD();
 
       if (waterLevel < 100) { //If the water level is too low, turn ON the red LED and turn OFF the motor and blue LED
         digitalWrite(redLED, HIGH);
@@ -67,7 +71,7 @@ void loop() {
         digitalWrite(motorPin, LOW);
       }
 
-      if (waterLevel > 100 && h < 70 && f > 75) { //If the water ;evel is high enough AND the humidity is low enough AND the temperature is high enough, turn ON the motor and blue LED, and turn OFF the red and yellow LEDs
+      if (waterLevel > 100 && h < 70 && f > 75) { //If the water level is high enough AND the humidity is low enough AND the temperature is high enough, turn ON the motor and blue LED, and turn OFF the red and yellow LEDs
         digitalWrite(motorPin, HIGH);
         digitalWrite(blueLED, HIGH);
         digitalWrite(yellowLED, LOW);
@@ -81,7 +85,7 @@ void loop() {
   }
 }
 
-void waterSensor() { //Measures the water level of the fill tank when called. waterPin is periodically set to LOW with a delay to prevent damage to the sensor
+void waterSensor() { //Measures the water level of the fill tank when called. waterPin is periodically toggled from HIGH to LOW with a delay to prevent damage to the sensor
   digitalWrite(waterPin, HIGH);
   delay(10);
   
@@ -98,14 +102,25 @@ void temperatureHumidity() { //Measures the ambient temperature in "F" and humid
   
   h = dht.readHumidity();
   f = dht.readTemperature(true);
+}
+
+void LCD() {
+  lcd.clear(); //Resets the screen for new data to be displayed
   
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print(" % ");
-  Serial.print("Temperature: ");
-  Serial.print(f);
-  Serial.print(" \xC2\xB0");
-  Serial.print("F ");
+  //Displays humidity in "%" on the top row of the LCD
+  lcd.setCursor(0,0);
+  lcd.print("Humidity: ");
+  lcd.print(h);
+  lcd.print(" % ");
+  
+  //Displays temperature in "F" on the bottom row of the LCD
+  lcd.setCursor(0,1);
+  lcd.print("Temperature: ");
+  lcd.print(f);
+  lcd.print(" \xC2\xB0");
+  cd.print("F ");
+      
+  delay(2000); //Syncs the LCD print speed with the operation speed of void temperatureHumidity()
 }
 
 void turnOff() { //Turns OFF the swamp cooler when called
@@ -118,4 +133,5 @@ void turnOff() { //Turns OFF the swamp cooler when called
   digitalWrite(motorPin, LOW);
   digitalWrite(buttonPin, LOW);
   analogWrite(waterSignal, LOW);
+  lcd.noDisplay();
 }
