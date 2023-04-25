@@ -22,8 +22,10 @@ float f;
 
 int waterLevel = 0;
 int loopState = OFF; //program is initially OFF, needs button press to turn ON
+const int rs = 6, en = 5, d4 = 3, d5 = 2, d6 = 1, d7 = 0;
 
 DHT dht = DHT(DHTPIN, DHTTYPE); //DHT11 initialization
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 ezButton button(buttonPin); //Button initialization
 
 void setup() {
