@@ -79,6 +79,7 @@ void loop() {
         digitalWrite(yellowLED, LOW);
         digitalWrite(redLED, LOW);    
       }
+      
     break;
 
     case OFF: //If the button is pressed again, turn OFF the swamp cooler
